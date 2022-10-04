@@ -1,20 +1,54 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const date = require(__dirname + "/date.js");
+const mongoose = require("mongoose");
+mongoose.connect("mongodb://127.0.0.1:27017/todolistDB", { useNewUrlParser: true });
 
 const app = express();
 
-let homeItems = ["Buy Food", "Cook Food", "Eat Food"];
-let workItems = ["Brush","Shower","Pack Lunch"];
+ let homeItems = ["Buy Food", "Cook Food", "Eat Food"];
+ let workItems = ["Brush","Shower","Pack Lunch"];
 
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+const itemsSchema = ({
+  name: String
+});
+
+const Item = mongoose.model("item", itemsSchema);
+
+const item1 = new Item({
+  name: "welcome to you todolint!"
+})
+
+const item2 = new Item({
+  name: "Hit the + button to add a new item."
+})
+
+const item3 = new Item({
+  name: "<-- Hit this to delete an item."
+})
+
+const defaultItems = [item1, item2 , item3];
+
+Item.insertMany(defaultItems, function(err){
+  if (err) {
+    console.log(err);
+  } else {
+    console.log("Sucessfully saved default items to DB")
+  }
+})
+
 app.get("/", function(req, res) {
-  let day = date.getDay();
-  res.render("list", {listTitle: day, newListItems: homeItems });
+
+  Item.find({}, function(err, foundItems){
+      res.render("list", {listTitle: "Today", newListItems: foundItems });
+  });
+
+
 }); //get
 
 
